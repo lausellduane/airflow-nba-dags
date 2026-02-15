@@ -139,11 +139,17 @@ def fetch_last_heat_game_details(**context):
         return
 
     prompt = f"""
-Write a short, engaging recap of the Miami Heat vs {home_name if 'MIA' not in away_name else away_name} game on {last_game['date']}.
-Final score: {away_name} {last_game['score_away']} - {home_name} {last_game['score_home']}.
-Highlight key performances, turning points, and team momentum.
-Keep it under 200 words, exciting but factual.
-"""
+    You are an NBA analyst writing a recap based **only** on the following facts. Do not add any information not explicitly provided here — no assumptions about players, rosters, trades, or current team affiliations.
+
+    Game facts:
+    - Date: {last_game['date']}
+    - Matchup: {away_name} @ {home_name}
+    - Final score: {away_name} {last_game['score_away']} - {home_name} {last_game['score_home']}
+    - Top performers (points, rebounds, assists):
+    {chr(10).join([f"- {p['name']} ({p['team']}): {p['pts']} PTS, {p['reb']} REB, {p['ast']} AST" for p in top_scorers])}
+
+    Write a short, engaging recap (under 200 words). Focus only on the game result, key performances, and momentum from the provided stats. Be factual and exciting — do not invent players, events, or context not given. If data is limited, keep it brief.
+    """
 
     try:
         grok_url = "https://api.x.ai/v1/chat/completions"  # Grok API endpoint (check x.ai for latest)
@@ -154,7 +160,7 @@ Keep it under 200 words, exciting but factual.
         payload = {
             "model": "grok-3",
             "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.7,
+            "temperature": 0.5,
             "max_tokens": 300
         }
         resp = requests.post(grok_url, headers=headers, json=payload, timeout=20)
