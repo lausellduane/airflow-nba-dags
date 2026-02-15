@@ -152,7 +152,7 @@ Keep it under 200 words, exciting but factual.
             "Content-Type": "application/json"
         }
         payload = {
-            "model": "grok-beta",
+            "model": "grok-3",
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0.7,
             "max_tokens": 300
