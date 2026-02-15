@@ -73,35 +73,59 @@ def fetch_last_heat_game_details(**context):
     # Extract top scorers (example: first 3 from each team)
     top_scorers = []
     for team in box_data.get('boxscore', {}).get('players', []):
+        team_name = team.get('team', {}).get('displayName', 'Unknown')
         statistics = team.get('statistics', [])
-        if not isinstance(statistics, list) or not statistics:
-            continue  # skip if stats is not list or empty
-        
+        if not isinstance(statistics, list):
+            continue
+
         for stat_group in statistics:
-            if not isinstance(stat_group, dict):
-                continue
             athletes = stat_group.get('athletes', [])
             if not isinstance(athletes, list):
                 continue
-            
+
             for player in athletes:
-                if not player.get('active', False):
+                athlete = player.get('athlete', {})
+                name = athlete.get('displayName', 'Unknown')
+                active = player.get('active', False)
+                if not active:
                     continue
+
                 stats = player.get('stats', [])
-                if not isinstance(stats, list):
-                    continue  # skip if stats is string or invalid
-                
-                pts = next((s.get('value', 0) for s in stats if isinstance(s, dict) and s.get('name') == 'points'), 0)
-                reb = next((s.get('value', 0) for s in stats if isinstance(s, dict) and s.get('name') == 'rebounds'), 0)
-                ast = next((s.get('value', 0) for s in stats if isinstance(s, dict) and s.get('name') == 'assists'), 0)
-                
-                top_scorers.append({
-                    'name': player.get('athlete', {}).get('displayName', 'Unknown'),
-                    'team': team.get('team', {}).get('displayName', 'Unknown'),
-                    'pts': pts,
-                    'reb': reb,
-                    'ast': ast,
-                })
+                if not isinstance(stats, list) or len(stats) < 12:
+                    continue  # skip if too short
+
+                try:
+                    minutes = stats[0] if len(stats) > 0 else '0'
+                    points = int(stats[1]) if len(stats) > 1 else 0
+                    fg = stats[2] if len(stats) > 2 else '0-0'
+                    three_pt = stats[3] if len(stats) > 3 else '0-0'
+                    ft = stats[4] if len(stats) > 4 else '0-0'
+                    rebounds = int(stats[5]) if len(stats) > 5 else 0
+                    off_reb = int(stats[6]) if len(stats) > 6 else 0
+                    assists = int(stats[7]) if len(stats) > 7 else 0
+                    steals = int(stats[8]) if len(stats) > 8 else 0
+                    blocks = int(stats[9]) if len(stats) > 9 else 0
+                    turnovers = int(stats[10]) if len(stats) > 10 else 0
+                    fouls = int(stats[11]) if len(stats) > 11 else 0
+                    plus_minus = stats[12] if len(stats) > 12 else '+0'
+
+                    top_scorers.append({
+                        'name': name,
+                        'team': team_name,
+                        'pts': points,
+                        'reb': rebounds,
+                        'ast': assists,
+                        'stl': steals,
+                        'blk': blocks,
+                        'to': turnovers,
+                        'min': minutes,
+                        'fg': fg,
+                        '3pt': three_pt,
+                        'ft': ft,
+                        '+/-': plus_minus,
+                    })
+                except (IndexError, ValueError):
+                    continue  # skip bad stat lines
 
     top_scorers = sorted(top_scorers, key=lambda x: x['pts'], reverse=True)[:6]
     print("\nTop performers:")
