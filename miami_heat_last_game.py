@@ -137,5 +137,4 @@ with DAG(
     fetch_last = PythonOperator(
         task_id='fetch_last_heat_game',
         python_callable=fetch_last_heat_game_details,
-        provide_context=True,
     )
