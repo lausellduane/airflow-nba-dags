@@ -73,15 +73,31 @@ def fetch_last_heat_game_details(**context):
     # Extract top scorers (example: first 3 from each team)
     top_scorers = []
     for team in box_data.get('boxscore', {}).get('players', []):
-        for player in team.get('statistics', [{}])[0].get('athletes', []):
-            if player.get('active', False):
+        statistics = team.get('statistics', [])
+        if not isinstance(statistics, list) or not statistics:
+            continue  # skip if stats is not list or empty
+        
+        for stat_group in statistics:
+            if not isinstance(stat_group, dict):
+                continue
+            athletes = stat_group.get('athletes', [])
+            if not isinstance(athletes, list):
+                continue
+            
+            for player in athletes:
+                if not player.get('active', False):
+                    continue
                 stats = player.get('stats', [])
-                pts = next((s['value'] for s in stats if s['name'] == 'points'), 0)
-                reb = next((s['value'] for s in stats if s['name'] == 'rebounds'), 0)
-                ast = next((s['value'] for s in stats if s['name'] == 'assists'), 0)
+                if not isinstance(stats, list):
+                    continue  # skip if stats is string or invalid
+                
+                pts = next((s.get('value', 0) for s in stats if isinstance(s, dict) and s.get('name') == 'points'), 0)
+                reb = next((s.get('value', 0) for s in stats if isinstance(s, dict) and s.get('name') == 'rebounds'), 0)
+                ast = next((s.get('value', 0) for s in stats if isinstance(s, dict) and s.get('name') == 'assists'), 0)
+                
                 top_scorers.append({
-                    'name': player['athlete']['displayName'],
-                    'team': team['team']['displayName'],
+                    'name': player.get('athlete', {}).get('displayName', 'Unknown'),
+                    'team': team.get('team', {}).get('displayName', 'Unknown'),
                     'pts': pts,
                     'reb': reb,
                     'ast': ast,
