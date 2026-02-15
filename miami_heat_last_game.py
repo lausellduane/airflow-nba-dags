@@ -60,7 +60,7 @@ with DAG(
     default_args=default_args,
     description='Fetch and summarize the most recent completed Miami Heat game',
     start_date=datetime(2026, 2, 1),
-    schedule_interval='0 8 * * *',  # 8 AM ET daily (after overnight games)
+    schedule='0 8 * * *',  # 8 AM ET daily (after overnight games)
     catchup=False,
     tags=['heat', 'summary', 'last-game'],
 ) as dag:
