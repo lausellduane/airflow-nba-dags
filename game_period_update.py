@@ -77,7 +77,7 @@ def quarter_sensor_func(quarter_number, is_half=False):
         print(f"Game already in Q{current_quarter}")
         return True
 
-    return False  # still waiting for this quarter/half
+    return True  # still waiting for this quarter/half - turned to True for debugging
 
 # Task to generate update for a quarter or half
 def generate_update(quarter_number, is_half=False):
