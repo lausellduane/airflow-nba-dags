@@ -30,18 +30,45 @@ def get_heat_game_id():
     raise AirflowSkipException("No Heat game today.")
 
 # Sensor to wait for specific quarter data
-def quarter_sensor_func(quarter_number):
-    game_id = get_heat_game_id()
+def quarter_sensor_func(quarter_number, is_half=False):
+    """
+    Sensor that returns True if the quarter/half has started or finished.
+    - If game is over → True
+    - If current quarter >= target quarter → True (catch-up logic)
+    - Otherwise wait
+    """
+    try:
+        game_id = get_heat_game_id()
+    except AirflowSkipException:
+        return True  # no game → skip sensor gracefully
+
     box_url = f"https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event={game_id}"
-    resp = requests.get(box_url, timeout=10)
-    data = resp.json()
+    try:
+        resp = requests.get(box_url, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+    except:
+        return False  # retry on API failure
+
     status = data['header']['competitions'][0]['status']['type']['state']
     current_quarter = data['header']['competitions'][0]['status']['period']
-    if status == 'in' and current_quarter >= quarter_number + 1:  # quarter_number completed
+
+    if status == 'post':
+        return True  # game over → all sensors pass
+
+    if status != 'in':
+        return False  # pre-game → keep waiting
+
+    # Catch-up logic: if we're already past the target quarter/half
+    target = quarter_number
+    if is_half:
+        target = 2 if quarter_number == 2 else 4  # first half = 2, second half = 4
+
+    if current_quarter > target:
+        print(f"Game already in Q{current_quarter} — catching up past {period_type}")
         return True
-    elif status == 'post':
-        return True  # game over
-    return False
+
+    return False  # still waiting for this quarter/half
 
 # Task to generate update for a quarter or half
 def generate_update(quarter_number, is_half=False):
