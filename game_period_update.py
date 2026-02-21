@@ -4,7 +4,10 @@ from airflow.operators.python import PythonOperator
 from airflow.sensors.python import PythonSensor
 import requests
 import pytz
+import logging
 from airflow.exceptions import AirflowSkipException
+
+logger = logging.getLogger(__name__)
 
 default_args = {
     'owner': 'duane',
@@ -40,7 +43,6 @@ def quarter_sensor_func(quarter_number, is_half=False):
     print(f"quarter_number: {quarter_number}")
     try:
         game_id = get_heat_game_id()
-        print(f"game_id: {game_id}")
     except AirflowSkipException:
         return True  # no game → skip sensor gracefully
 
@@ -49,12 +51,16 @@ def quarter_sensor_func(quarter_number, is_half=False):
         resp = requests.get(box_url, timeout=10)
         resp.raise_for_status()
         data = resp.json()
-        print(f"data: {data}")
     except:
         return False  # retry on API failure
+    
+    logger.info(f"quarter_number: {quarter_number}")
+    logger.info(f"game_id: {game_id}")
+    logger.info(f"data: {data}")
 
     status = data['header']['competitions'][0]['status']['type']['state']
     current_quarter = data['header']['competitions'][0]['status']['period']
+    logger.info(f"Game already in Q{current_quarter}")
 
     if status == 'post':
         return True  # game over → all sensors pass
