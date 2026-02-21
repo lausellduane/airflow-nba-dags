@@ -49,6 +49,12 @@ def quarter_sensor_func(quarter_number, is_half=False):
         data = resp.json()
     except:
         return False  # retry on API failure
+    
+    print(f"""
+        quarter_number: {quarter_number}
+        game_id: {game_id}
+        data: {data}
+    """)
 
     status = data['header']['competitions'][0]['status']['type']['state']
     current_quarter = data['header']['competitions'][0]['status']['period']
