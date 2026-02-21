@@ -37,8 +37,10 @@ def quarter_sensor_func(quarter_number, is_half=False):
     - If current quarter >= target quarter → True (catch-up logic)
     - Otherwise wait
     """
+    print(f"quarter_number: {quarter_number}")
     try:
         game_id = get_heat_game_id()
+        print(f"game_id: {game_id}")
     except AirflowSkipException:
         return True  # no game → skip sensor gracefully
 
@@ -47,12 +49,9 @@ def quarter_sensor_func(quarter_number, is_half=False):
         resp = requests.get(box_url, timeout=10)
         resp.raise_for_status()
         data = resp.json()
+        print(f"data: {data}")
     except:
         return False  # retry on API failure
-    
-    print(f"quarter_number: {quarter_number}")
-    print(f"game_id: {game_id}")
-    print(f"data: {data}")
 
     status = data['header']['competitions'][0]['status']['type']['state']
     current_quarter = data['header']['competitions'][0]['status']['period']
@@ -69,7 +68,7 @@ def quarter_sensor_func(quarter_number, is_half=False):
         target = 2 if quarter_number == 2 else 4  # first half = 2, second half = 4
 
     if current_quarter > target:
-        print(f"Game already in Q{current_quarter} — catching up past {period_type}")
+        print(f"Game already in Q{current_quarter}")
         return True
 
     return False  # still waiting for this quarter/half
