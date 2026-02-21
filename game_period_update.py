@@ -131,7 +131,8 @@ with DAG(
     default_args=default_args,
     description='Live updates for Miami Heat games per quarter and half',
     start_date=datetime(2026, 2, 1),
-    schedule='*/5 * * * *',  # every 5 minutes
+    # schedule='*/5 * * * *',  # every 5 minutes
+    schedule=None,  # manual
     catchup=False,
     tags=['heat', 'live', 'quarter'],
 ) as dag:
@@ -150,58 +151,59 @@ with DAG(
         op_args=[1],
     )
 
-    wait_q2 = PythonSensor(
-        task_id='wait_for_q2',
-        python_callable=quarter_sensor_func,
-        op_args=[1],  # Q2
-        poke_interval=60,
-        timeout=3600 * 4,
-    )
+    # wait_q2 = PythonSensor(
+    #     task_id='wait_for_q2',
+    #     python_callable=quarter_sensor_func,
+    #     op_args=[1],  # Q2
+    #     poke_interval=60,
+    #     timeout=3600 * 4,
+    # )
 
-    update_q2 = PythonOperator(
-        task_id='update_q2',
-        python_callable=generate_update,
-        op_args=[2],
-    )
+    # update_q2 = PythonOperator(
+    #     task_id='update_q2',
+    #     python_callable=generate_update,
+    #     op_args=[2],
+    # )
 
-    update_first_half = PythonOperator(
-        task_id='update_first_half',
-        python_callable=generate_update,
-        op_args=[2, True],  # Half = True
-    )
+    # update_first_half = PythonOperator(
+    #     task_id='update_first_half',
+    #     python_callable=generate_update,
+    #     op_args=[2, True],  # Half = True
+    # )
 
-    wait_q3 = PythonSensor(
-        task_id='wait_for_q3',
-        python_callable=quarter_sensor_func,
-        op_args=[2],  # Q3
-        poke_interval=60,
-        timeout=3600 * 4,
-    )
+    # wait_q3 = PythonSensor(
+    #     task_id='wait_for_q3',
+    #     python_callable=quarter_sensor_func,
+    #     op_args=[2],  # Q3
+    #     poke_interval=60,
+    #     timeout=3600 * 4,
+    # )
 
-    update_q3 = PythonOperator(
-        task_id='update_q3',
-        python_callable=generate_update,
-        op_args=[3],
-    )
+    # update_q3 = PythonOperator(
+    #     task_id='update_q3',
+    #     python_callable=generate_update,
+    #     op_args=[3],
+    # )
 
-    wait_q4 = PythonSensor(
-        task_id='wait_for_q4',
-        python_callable=quarter_sensor_func,
-        op_args=[3],  # Q4
-        poke_interval=60,
-        timeout=3600 * 4,
-    )
+    # wait_q4 = PythonSensor(
+    #     task_id='wait_for_q4',
+    #     python_callable=quarter_sensor_func,
+    #     op_args=[3],  # Q4
+    #     poke_interval=60,
+    #     timeout=3600 * 4,
+    # )
 
-    update_q4 = PythonOperator(
-        task_id='update_q4',
-        python_callable=generate_update,
-        op_args=[4],
-    )
+    # update_q4 = PythonOperator(
+    #     task_id='update_q4',
+    #     python_callable=generate_update,
+    #     op_args=[4],
+    # )
 
-    update_second_half = PythonOperator(
-        task_id='update_second_half',
-        python_callable=generate_update,
-        op_args=[4, True],
-    )
+    # update_second_half = PythonOperator(
+    #     task_id='update_second_half',
+    #     python_callable=generate_update,
+    #     op_args=[4, True],
+    # )
 
-    wait_q1 >> update_q1 >> wait_q2 >> update_q2 >> update_first_half >> wait_q3 >> update_q3 >> wait_q4 >> update_q4 >> update_second_half
+    # wait_q1 >> update_q1 >> wait_q2 >> update_q2 >> update_first_half >> wait_q3 >> update_q3 >> wait_q4 >> update_q4 >> update_second_half
+    wait_q1 >> update_q1
